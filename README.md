@@ -4,6 +4,8 @@ A brief choose your own adventure game where the protagonist explores a dark for
 
 **This program requires JDK, which was inside this folder alongside Main.java. Please run JavaCodingPack-0.4.2.exe first, and then run Main.java to play the game**
 
+JDK was unable to be uploaded to github, so please download from Oracle: https://www.oracle.com/java/technologies/downloads/
+
 ## Once the game is started the user will be prompted to input their name and pronouns, and then the rest of the game will be decided by the players decisions. You may be asked to type your choices, please be sure to type exactly your choice as it is presented to you in the story.
 
 ### Ex: You have the option to jump, risky but fast. Or slowly climb down, the tree is beginning to creak under your weight.
@@ -29,6 +31,7 @@ Features:
 
 - Refactored additionaly, added new chapter
 - Added inventory item selection method
+
 
 
 Plans for new features or improvements: Hoping to implement a combat tracker in the future, and maybe eventually a map. Short term more looking to implement new code statements and pad out dialogue options. 
