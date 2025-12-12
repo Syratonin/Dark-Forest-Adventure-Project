@@ -2,52 +2,49 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Random;
 import java.util.Scanner;
 
 //Inputstream for Scanner, because I am lazy and I don't want to rewrite my code
-class GUIInputStream extends InputStream {
-    private String buffer = "";
-    private final Object lock = new Object();
-    private final AdventureGUI gui; // Final to avoid lambda issues
 
-    public GUIInputStream(AdventureGUI gui) {
-        this.gui = gui;
+class InputWaiter {
+    private String input = null;
 
-        gui.setNextListener(e -> {
-            synchronized (lock) {
-                buffer = gui.getInputText() + "\n";
+    public InputWaiter(AdventureGUI gui) {
+        new Thread(() -> {
+            gui.setNextListener(e -> {
+                input = gui.getInputText();
                 gui.clearInput();
-                lock.notifyAll();
-            }
-        });
+            });
+        }).start();
     }
 
-    public String getBuffer(AdventureGUI gui) { // <-- This here
-        gui.setNextListener(e -> {
-            buffer = gui.getInputText() + "\n";
-            gui.clearInput();
-        });
-        return buffer;
-    }
-
-    @Override
-    public int read() throws IOException {
-        synchronized (lock) {
-
-            while (buffer.isEmpty()) { // I can't seem to get this to stop blocking input
-
-                try {
-                    buffer.wait(1);
-
-                } catch (InterruptedException e) {
-                    throw new IOException(e);
-                }
+    public String nextLine() {
+        try {
+            while (input == null) {
+                Thread.sleep(10);
+                continue;
             }
 
-            int ch = buffer.charAt(0);
-            buffer = buffer.substring(1);
-            return ch;
+            String buf = input;
+            input = null;
+            return buf;
+        } catch (InterruptedException e) {
+            return null;
+        }
+    }
+
+    public String next() {
+        return nextLine();
+    }
+
+    public int nextInt() {
+        try {
+            String next = nextLine();
+            return Integer.parseInt(next);
+        } catch (NumberFormatException e) {
+            return -1;
         }
     }
 }
@@ -264,8 +261,8 @@ class ChoiceNode extends StoryNode {
     @Override
     public void display(GameState state) {
         System.out.println("Choose adventurer! Right or left?");
-        Scanner in = new Scanner(System.in);
-        String returnVal = in.nextLine();
+
+        String returnVal = AdventureGame.in.nextLine();
         if (returnVal.equalsIgnoreCase("right")) {
             state.setLastChoice(returnVal);
             return;
@@ -304,9 +301,10 @@ class DialogueNode extends StoryNode {
 }
 
 public class AdventureGame {
+
     static AdventureGUI gui = new AdventureGUI();
-    static GUIInputStream guiIn = new GUIInputStream(gui);
-    static Scanner in = new Scanner(guiIn);
+
+    static InputWaiter in = new InputWaiter(gui);
     // I was... Experiencing moderate frustration... so I made in a static scanner
     // to avoid overcomplicating things
 
@@ -325,7 +323,7 @@ public class AdventureGame {
         }
     }
 
-    // Combat: Her Turn
+    // Combat: Hero Turn
     public static void heroTurn(GameState state, ArrayList<NPC> enemies, ArrayList<NPC> enemiesDead) {
         if (enemies.isEmpty()) {
             System.out.println("Victory!");
@@ -444,7 +442,7 @@ public class AdventureGame {
 
         System.out.println();
 
-        int action;
+        int action = -1;
         boolean valid = false;
         while (valid == false) {
             System.out.println("Please enter the number of the slot of the item you want to use");
@@ -615,7 +613,6 @@ public class AdventureGame {
 
         System.out.print("Enter your character's age: ");
         int age = in.nextInt();
-        in.nextLine(); // In case enter is pressed this prevents issues later
 
         // An example integer you can reference later (feel free to rename/use
         // differently)
@@ -985,6 +982,15 @@ public class AdventureGame {
         System.out.println("Famished, you sit and eat some cookies the family offers you");
         eatCookies(3);
 
-        // End new content
+        if (wasAmbushed == false) {
+            System.out.println("The braying of wloves is heard howling at the door, and " + name
+                    + " braces their weapon to prepare");
+        }
+
+        System.out.println("To be continued...");
+
+        System.out.println("Thanks for Playing!");
+
+        // End 1st Semester Content
     }
 }

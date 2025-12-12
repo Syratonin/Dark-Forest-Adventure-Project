@@ -37,7 +37,9 @@ Features:
 - Added recursion demonstrations
 - Added dialogue and a fight with wolves based on player decisions
 
+- 12/12 Added GUI Support, including button, and added custom scanner object to pipe input from gui into main program with minimal edits. Including outputstream for system.out redirect
 
 
-Plans for new features or improvements: Implementing inventory to combat system, fleshing out dialogue and char development, and adding GUI support
+
+Plans for new features or improvements: Implementing inventory to combat system, fleshing out dialogue and char development, and improving GUI support.
 
