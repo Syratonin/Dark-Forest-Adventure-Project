@@ -1,8 +1,58 @@
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
-//Stat tracking moved here
+//Inputstream for Scanner, because I am lazy and I don't want to rewrite my code
+class GUIInputStream extends InputStream {
+    private String buffer = "";
+    private final Object lock = new Object();
+    private final AdventureGUI gui; // Final to avoid lambda issues
+
+    public GUIInputStream(AdventureGUI gui) {
+        this.gui = gui;
+
+        gui.setNextListener(e -> {
+            synchronized (lock) {
+                buffer = gui.getInputText() + "\n";
+                gui.clearInput();
+                lock.notifyAll();
+            }
+        });
+    }
+
+    public String getBuffer(AdventureGUI gui) { // <-- This here
+        gui.setNextListener(e -> {
+            buffer = gui.getInputText() + "\n";
+            gui.clearInput();
+        });
+        return buffer;
+    }
+
+    @Override
+    public int read() throws IOException {
+        synchronized (lock) {
+
+            while (buffer.isEmpty()) { // I can't seem to get this to stop blocking input
+
+                try {
+                    buffer.wait(1);
+
+                } catch (InterruptedException e) {
+                    throw new IOException(e);
+                }
+            }
+
+            int ch = buffer.charAt(0);
+            buffer = buffer.substring(1);
+            return ch;
+        }
+    }
+}
+
+// Stat tracking moved here
 class GameState {
     private int hp;
     private int def;
@@ -254,7 +304,9 @@ class DialogueNode extends StoryNode {
 }
 
 public class AdventureGame {
-    static Scanner in = new Scanner(System.in);
+    static AdventureGUI gui = new AdventureGUI();
+    static GUIInputStream guiIn = new GUIInputStream(gui);
+    static Scanner in = new Scanner(guiIn);
     // I was... Experiencing moderate frustration... so I made in a static scanner
     // to avoid overcomplicating things
 
@@ -519,6 +571,14 @@ public class AdventureGame {
         // Inventory initialization moved here
 
         // Added Gamestate initialization
+
+        // GUI Initialization attempts no longer worth counting
+        // AdventureGUI gui = new AdventureGUI();
+        // in = new Scanner(new GUIInputStream(gui));
+
+        // Redirecting System.out
+        PrintStream printStream = new PrintStream(new TextAreaOutputStream(gui));
+        System.setOut((printStream));
 
         GameState gameState = new GameState();
 
